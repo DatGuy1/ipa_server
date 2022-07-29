@@ -1,9 +1,13 @@
 [package]
-name = "IPAServer"
+name = "ipa_server"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-aws-sdk-polly = "0.16.0"
+aws-config = "0.46.0"
+aws-sdk-polly = { version = "0.16.0", features = ["rt-tokio"] }
+lazy_static = "1.4.0"
+rand = { version = "0.8.5" }
+rocket = { version = "0.5.0-rc.2", features = ["json"] }
