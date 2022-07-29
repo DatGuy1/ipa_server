@@ -109,7 +109,7 @@ async fn main() {
 
     let mut all_voices: HashMap<String, Vec<VoiceId>> = HashMap::new();
 
-    let voices_result = polly_client.describe_voices().send().await.unwrap();
+    let voices_result = polly_client.describe_voices().send().await.expect("Please (re)initialise your AWS credentials. See https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html");
     for voice in voices_result.voices.unwrap() {
         if !voice.clone().supported_engines.unwrap().contains(&Engine::Standard) {
             continue;
