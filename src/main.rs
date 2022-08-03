@@ -17,6 +17,8 @@ use rocket::response::stream::ReaderStream;
 use rocket::State;
 use rocket::serde::Deserialize;
 use rocket::serde::json::Json;
+use rocket_governor::{Method, Quota, ReqState, RocketGovernable, RocketGovernor};
+use rocket_validation::{Validate, Validated};
 
 mod cors;
 
@@ -48,9 +50,22 @@ lazy_static! {
     ]);
 }
 
-#[derive(Debug, Deserialize)]
+pub struct RateLimitGuard;
+
+impl<'r> RocketGovernable<'r> for RateLimitGuard {
+    fn quota(_method: Method, _route_name: &str) -> Quota {
+        Quota::per_hour(Self::nonzero(100u32))
+    }
+
+    fn limit_info_allow(_method: Option<Method>, _route_name: Option<&str>, _state: &ReqState) -> bool {
+        true
+    }
+}
+
+#[derive(Debug, Deserialize, Validate)]
 #[serde(crate = "rocket::serde")]
 pub struct RequestData {
+    #[validate(length(min = 1, max = 50))]
     ipa: String,
     language: String,
 }
@@ -60,8 +75,9 @@ struct Polly {
     speakers: HashMap<String, Vec<VoiceId>>,
 }
 
-#[post("/", format = "json", data = "<data>")]
-async fn speak(data: Json<RequestData>, polly: &State<Polly>) -> Result<ReaderStream![impl rocket::tokio::io::AsyncRead], status::BadRequest<String>> {
+#[post("/", format = "json", data = "<validated_data>")]
+async fn speak(validated_data: Validated<Json<RequestData>>, polly: &State<Polly>, _limitguard: RocketGovernor<'_, RateLimitGuard>) -> Result<ReaderStream![impl rocket::tokio::io::AsyncRead], status::BadRequest<String>> {
+    let data = validated_data.into_inner();
     let target_language = &*data.language;
     if !LANGUAGE_TO_CODE.contains_key(target_language) {
         return Err(status::BadRequest(Some(format!("Language {target_language} is unsupported"))));
@@ -137,8 +153,10 @@ async fn main() {
 
     let _ = rocket::build()
         .attach(cors::CORS)
+        .attach(rocket_governor::LimitHeaderGen::default())
         .manage(polly)
         .mount("/", routes![index, speak, all_options])
+        .register("/", catchers![rocket_validation::validation_catcher])
         .launch()
         .await;
 }
