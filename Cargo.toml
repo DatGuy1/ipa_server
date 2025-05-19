@@ -6,11 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-aws-config = "0.46.0"
-aws-sdk-polly = { version = "0.16.0", features = ["rt-tokio"] }
+aws-config = "1.6.3"
+aws-sdk-polly = { version = "1.72.0", features = ["rt-tokio"] }
 lazy_static = "1.4.0"
-rand = { version = "0.8.5" }
-rocket = { version = "0.5.0-rc.2", features = ["json"] }
-rocket-governor = { version = "0.1.0-rc.4", features = ["limit_info"] }
-rocket-validation = "0.1.2"
-validator = { version = "0.16.0", default-features = false, features = ["derive"] }
+log = "0.4.27"
+env_logger = "0.11.8"
+rand = { version = "0.9.1" }
+rocket = { version = "0.5.1", features = ["json"] }
+rocket-governor = { version = "0.2.0-rc.4", features = ["limit_info"] }
+serde = { version = "1.0", features = ["derive"] }
