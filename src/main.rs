@@ -50,6 +50,12 @@ lazy_static! {
         ("Swedish", LanguageCode::SvSe),
         ("Turkish", LanguageCode::TrTr)
     ]);
+
+    static ref LANGUAGE_NORMALIZATION: HashMap<&'static str, &'static str> = HashMap::from([
+        ("german", "Standard German"),
+        ("hindi", "Hindi and Urdu"),
+        ("urdu", "Hindi and Urdu"),
+    ]);
 }
 
 pub struct RateLimitGuard;
@@ -118,10 +124,10 @@ async fn speak(
     }
 
     // Validate language
-    let target_language = &*data.language;
+    let target_language = normalize_language_name(&data.language);
     let language_code = LANGUAGE_TO_CODE
         .get(target_language)
-        .ok_or_else(|| status::BadRequest(format!("Language {target_language} is unsupported")))?;
+        .unwrap_or(&LanguageCode::EnUs); // .ok_or_else(|| status::BadRequest(format!("Language {} is unsupported", target_language)))?;
 
     let generic_language = generic_language_from_code(language_code.clone());
     let speakers = polly.speakers.get(&generic_language).ok_or_else(|| {
@@ -164,6 +170,14 @@ fn all_options() {}
 
 fn generic_language_from_code(master_code: LanguageCode) -> String {
     master_code.as_str().get(0..2).unwrap().to_string()
+}
+
+fn normalize_language_name(input: &str) -> &str {
+    let lower = input.to_lowercase();
+    LANGUAGE_NORMALIZATION
+        .get(lower.as_str())
+        .copied()
+        .unwrap_or(input)
 }
 
 #[rocket::main]
