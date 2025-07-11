@@ -20,7 +20,7 @@ use rocket_governor::{Method, Quota, ReqState, RocketGovernable, RocketGovernor}
 
 mod cors;
 
-const MAX_IPA_LENGTH: usize = 50;
+const MAX_IPA_LENGTH: usize = 100;
 const MIN_IPA_LENGTH: usize = 1;
 const RATE_LIMIT_PER_HOUR: u32 = 100;
 
